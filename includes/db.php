@@ -1,8 +1,8 @@
 <?php
 $host = 'localhost';
-$db   = 'farmappv3';
-$user = 'fav3';
-$pass = 'U^=2wB=TsoV.d?TC';
+$db   = 'eee';
+$user = eee';
+$pass = nope;
 $charset = 'utf8mb4';
 
 $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
