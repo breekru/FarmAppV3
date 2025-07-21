@@ -1,7 +1,9 @@
 <?php
 session_start();
 require_once "includes/db.php";
+require_once "includes/functions.php";
 
+// Generate a secure reset token
 function generateToken($length = 64) {
     return bin2hex(random_bytes($length / 2));
 }
@@ -16,47 +18,39 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit;
     }
 
-    // Check if user exists
+    // Check if the user exists
     $stmt = $pdo->prepare("SELECT id FROM users WHERE email = :email LIMIT 1");
     $stmt->execute(['email' => $email]);
     $user = $stmt->fetch();
 
     if ($user) {
-        // Generate token and expiration
         $token = generateToken();
         $expires = date("Y-m-d H:i:s", time() + 3600); // 1 hour from now
 
-        // Store token
+        // Save token to DB
         $stmt = $pdo->prepare("UPDATE users SET reset_token = :token, reset_expires = :expires WHERE id = :id");
         $stmt->execute([
             'token' => $token,
             'expires' => $expires,
-            'id' => $user["id"]
+            'id' => $user['id']
         ]);
 
-        // Build email
-        $subject = "FarmApp Password Reset";
-        $resetLink = "https://farmappv3.blkfarms.com/reset_password.php?token=$token"; // Adjust domain
-        $message = "You requested a password reset.\n\n";
-        $message .= "Click the link below to reset your password:\n$resetLink\n\n";
-        $message .= "This link expires in 1 hour.";
+        // Build reset link
+        $resetLink = "https://farmapp.blkfarms.com/reset_password.php?token=$token";
 
-        $headers = "From: no-reply@blkfarms.com\r\n";
-        $headers .= "Reply-To: support@blkfarms.com\r\n";
-        $headers .= "X-Mailer: PHP/" . phpversion();
-
-        // Send it
-        if (mail($email, $subject, $message, $headers)) {
+        // Send reset email
+        $sent = sendResetEmail($email, $resetLink);
+        if ($sent) {
             $_SESSION["success"] = "A password reset link has been sent to your email.";
         } else {
-            $_SESSION["error"] = "Failed to send email. Please try again later.";
+            $_SESSION["error"] = "Unable to send the reset email. Please try again later.";
         }
         header("Location: forgot_password.php");
         exit;
-
     }
 
-    $_SESSION["error"] = "If the email exists, a reset link will be sent.";
+    // Generic response even if user is not found (security best practice)
+    $_SESSION["success"] = "A password reset link has been sent to your email.";
     header("Location: forgot_password.php");
     exit;
 }
@@ -78,6 +72,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (isset($_SESSION['error'])) {
         echo "<p class='error'>" . $_SESSION['error'] . "</p>";
         unset($_SESSION['error']);
+    }
+    if (isset($_SESSION['success'])) {
+        echo "<p class='success'>" . $_SESSION['success'] . "</p>";
+        unset($_SESSION['success']);
     }
     ?>
 
