@@ -1,7 +1,9 @@
 <?php
+// Enable error reporting for debugging
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
+
 session_start();
 require_once "includes/db.php";
 
@@ -11,7 +13,7 @@ if (isset($_SESSION["user_id"])) {
     exit;
 }
 
-// Process login form
+// Process form submission
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = trim($_POST["username"]);
     $password = $_POST["password"];
@@ -22,13 +24,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit;
     }
 
-    // Fetch user by username or email
-    $stmt = $pdo->prepare("SELECT id, username, email, password FROM users WHERE username = :username OR email = :username LIMIT 1");
-    $stmt->execute(['username' => $username]);
+    // Fetch user using username or email
+    $stmt = $pdo->prepare("SELECT id, username, email, password FROM users WHERE username = :username OR email = :email LIMIT 1");
+    $stmt->execute([
+        'username' => $username,
+        'email' => $username
+    ]);
     $user = $stmt->fetch();
 
     if ($user && password_verify($password, $user["password"])) {
-        // Valid login
+        // Login successful
         $_SESSION["user_id"] = $user["id"];
         $_SESSION["username"] = $user["username"];
         header("Location: dashboard.php");
