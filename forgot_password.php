@@ -36,7 +36,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         ]);
 
         // Build reset link
-        $resetLink = "https://farmapp.blkfarms.com/reset_password.php?token=$token";
+        $resetLink = "https://farmappv3.blkfarms.com/reset_password.php?token=$token";
 
         // Send reset email
         $sent = sendResetEmail($email, $resetLink);
