@@ -34,18 +34,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             'id' => $user["id"]
         ]);
 
-        // Construct reset link (adjust your domain)
-        $resetLink = "https://farmappv3.blkfarms.com/reset_password.php?token=$token";
-
-        // Send email (simplified for now)
-        $to = $email;
+        // Build email
         $subject = "FarmApp Password Reset";
-        $message = "Click the link below to reset your password:\n$resetLink\nThis link expires in 1 hour.";
-        $headers = "From: no-reply@yourdomain.com";
+        $resetLink = "https://farmappv3.blkfarms.com/reset_password.php?token=$token"; // Adjust domain
+        $message = "You requested a password reset.\n\n";
+        $message .= "Click the link below to reset your password:\n$resetLink\n\n";
+        $message .= "This link expires in 1 hour.";
 
-        // Preview version — replace with mail() in production
-        echo "<p style='padding: 1rem;'>Simulated email to <b>$email</b>:<br><pre>$message</pre></p>";
+        $headers = "From: no-reply@blkfarms.com\r\n";
+        $headers .= "Reply-To: support@blkfarms.com\r\n";
+        $headers .= "X-Mailer: PHP/" . phpversion();
+
+        // Send it
+        if (mail($email, $subject, $message, $headers)) {
+            $_SESSION["success"] = "A password reset link has been sent to your email.";
+        } else {
+            $_SESSION["error"] = "Failed to send email. Please try again later.";
+        }
+        header("Location: forgot_password.php");
         exit;
+
     }
 
     $_SESSION["error"] = "If the email exists, a reset link will be sent.";
