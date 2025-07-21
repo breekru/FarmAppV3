@@ -1,8 +1,8 @@
 <?php
 $host = 'localhost';
-$db   = 'your_database_name';
-$user = 'your_database_user';
-$pass = 'your_database_password';
+$db   = 'farmappv3';
+$user = 'fav3';
+$pass = 'U^=2wB=TsoV.d?TC';
 $charset = 'utf8mb4';
 
 $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
@@ -19,3 +19,6 @@ try {
     die("Database connection failed: " . $e->getMessage());
 }
 ?>
+
+
+
