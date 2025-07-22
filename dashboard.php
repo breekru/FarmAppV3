@@ -1,5 +1,5 @@
 <?php
-// dashboard.php (Secure Version)
+// dashboard.php — with navigation
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -23,21 +23,42 @@ $username = htmlspecialchars($_SESSION["username"], ENT_QUOTES, 'UTF-8');
   <title>Dashboard | FarmApp</title>
   <link rel="stylesheet" href="css/main.css">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    .grid-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: center;
+      margin-top: 2rem;
+    }
+    .grid-buttons a {
+      display: inline-block;
+      padding: 1rem 2rem;
+      text-align: center;
+      text-decoration: none;
+      color: white;
+      background-color: #2d2d30;
+      border-radius: 8px;
+      font-size: 1rem;
+      min-width: 160px;
+    }
+    .grid-buttons a:hover {
+      background-color: #1f1f21;
+    }
+  </style>
 </head>
 <body>
   <div class="form-container">
     <h2>Welcome to FarmApp, <?php echo $username; ?>!</h2>
 
-    <p>This is your dashboard. From here you’ll be able to:</p>
-    <ul style="text-align: left; margin-top: 1rem;">
-      <li>👁 View & manage your animals</li>
-      <li>➕ Add new animal records</li>
-      <li>🧾 Generate farm reports</li>
-      <li>⚙️ Update account settings</li>
-    </ul>
+    <p>What would you like to do?</p>
 
-    <br>
-    <a href="logout.php" class="button-link">Logout</a>
+    <div class="grid-buttons">
+      <a href="add_animal.php">➕ Add Animal</a>
+      <a href="view_animals.php">📋 View Animals</a>
+      <a href="reset_password.php">🔐 Change Password</a>
+      <a href="logout.php">🚪 Logout</a>
+    </div>
   </div>
 </body>
 </html>

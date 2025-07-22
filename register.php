@@ -1,5 +1,5 @@
 <?php
-// register.php (Secure Version)
+// register.php (Secure Version with Password Strength Check)
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -43,6 +43,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     if ($password !== $confirm_password) {
         $_SESSION['error'] = "Passwords do not match.";
+        header("Location: register.php");
+        exit;
+    }
+
+    // Enforce password complexity: min 8 chars, at least 1 upper, 1 lower, 1 digit
+    if (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/', $password)) {
+        $_SESSION['error'] = "Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, and one number.";
         header("Location: register.php");
         exit;
     }

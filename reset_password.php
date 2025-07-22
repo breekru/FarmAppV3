@@ -51,6 +51,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit;
     }
 
+    if (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,}$/', $password)) {
+    $_SESSION['error'] = "Password must be at least 8 characters long and include upper/lowercase letters and a number.";
+    header("Location: reset_password.php?token=$token");
+    exit;
+    }
+
     $hashed = password_hash($password, PASSWORD_DEFAULT);
     $stmt = $pdo->prepare("UPDATE users SET password = :pass, reset_token = NULL, reset_expires = NULL WHERE id = :id");
     $stmt->execute([
