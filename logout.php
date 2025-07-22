@@ -1,7 +1,11 @@
 <?php
+// logout.php (Secure Version)
+ini_set('session.cookie_httponly', 1);
+ini_set('session.cookie_secure', 1);
+
 session_start();
 
-// Clear all session variables
+// Clear session data
 $_SESSION = [];
 
 // Destroy session cookie
@@ -13,12 +17,12 @@ if (ini_get("session.use_cookies")) {
     );
 }
 
-// Destroy session
+// Fully destroy session
 session_destroy();
 
-// Optional: show logout message
+// Start a new session for logout message
 session_start();
-$_SESSION['error'] = "You have been logged out.";
+$_SESSION['success'] = "You have been logged out.";
 
 header("Location: login.php");
 exit;

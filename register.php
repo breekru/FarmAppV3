@@ -1,21 +1,34 @@
 <?php
+// register.php (Secure Version)
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+ini_set('session.cookie_httponly', 1);
+ini_set('session.cookie_secure', 1);
+
 session_start();
 require_once "includes/db.php";
+require_once "includes/functions.php";
 
-// Redirect if already logged in
 if (isset($_SESSION["user_id"])) {
     header("Location: dashboard.php");
     exit;
 }
 
-// Handle form submission
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $username = trim($_POST["username"]);
-    $email = trim($_POST["email"]);
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        die("Invalid CSRF token.");
+    }
+
+    $username = trim(strip_tags($_POST["username"]));
+    $email = filter_var(trim($_POST["email"]), FILTER_SANITIZE_EMAIL);
     $password = $_POST["password"];
     $confirm_password = $_POST["confirm_password"];
 
-    // Validate input
     if (empty($username) || empty($email) || empty($password) || empty($confirm_password)) {
         $_SESSION['error'] = "All fields are required.";
         header("Location: register.php");
@@ -34,7 +47,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit;
     }
 
-    // Check for existing username or email
     $stmt = $pdo->prepare("SELECT id FROM users WHERE username = :username OR email = :email");
     $stmt->execute(['username' => $username, 'email' => $email]);
     if ($stmt->fetch()) {
@@ -43,7 +55,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit;
     }
 
-    // Hash and insert user
     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
     $stmt = $pdo->prepare("INSERT INTO users (username, email, password) VALUES (:username, :email, :password)");
     $stmt->execute([
@@ -72,7 +83,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     <?php
     if (isset($_SESSION['error'])) {
-        echo "<p class='error'>" . $_SESSION['error'] . "</p>";
+        echo "<p class='error'>" . htmlspecialchars($_SESSION['error']) . "</p>";
         unset($_SESSION['error']);
     }
     ?>
@@ -90,6 +101,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       <label>Confirm Password</label>
       <input type="password" name="confirm_password" required>
 
+      <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
       <button type="submit">Register</button>
     </form>
 

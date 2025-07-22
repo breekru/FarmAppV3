@@ -1,13 +1,19 @@
 <?php
+// dashboard.php (Secure Version)
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+ini_set('session.cookie_httponly', 1);
+ini_set('session.cookie_secure', 1);
+
 session_start();
 
-// Redirect to login if not logged in
 if (!isset($_SESSION["user_id"])) {
     header("Location: login.php");
     exit;
 }
 
-$username = htmlspecialchars($_SESSION["username"]);
+$username = htmlspecialchars($_SESSION["username"], ENT_QUOTES, 'UTF-8');
 ?>
 
 <!DOCTYPE html>

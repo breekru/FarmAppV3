@@ -1,8 +1,15 @@
 <?php
+// reset_password.php (Secure Version)
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+ini_set('session.cookie_httponly', 1);
+ini_set('session.cookie_secure', 1);
+
 session_start();
 require_once "includes/db.php";
+require_once "includes/functions.php";
 
-// Step 1: Validate token from URL
 if (!isset($_GET["token"])) {
     $_SESSION["error"] = "Invalid or missing token.";
     header("Location: login.php");
@@ -20,8 +27,15 @@ if (!$user || strtotime($user["reset_expires"]) < time()) {
     exit;
 }
 
-// Step 2: Handle form submission
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        die("Invalid CSRF token.");
+    }
+
     $password = $_POST["password"] ?? "";
     $confirm = $_POST["confirm_password"] ?? "";
 
@@ -37,7 +51,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit;
     }
 
-    // Update password
     $hashed = password_hash($password, PASSWORD_DEFAULT);
     $stmt = $pdo->prepare("UPDATE users SET password = :pass, reset_token = NULL, reset_expires = NULL WHERE id = :id");
     $stmt->execute([
@@ -65,7 +78,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     <?php
     if (isset($_SESSION['error'])) {
-        echo "<p class='error'>" . $_SESSION['error'] . "</p>";
+        echo "<p class='error'>" . htmlspecialchars($_SESSION['error']) . "</p>";
         unset($_SESSION['error']);
     }
     ?>
@@ -77,6 +90,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       <label>Confirm New Password</label>
       <input type="password" name="confirm_password" required>
 
+      <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
       <button type="submit">Update Password</button>
     </form>
 

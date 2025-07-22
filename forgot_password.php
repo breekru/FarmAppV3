@@ -1,56 +1,62 @@
 <?php
+// forgot_password.php (Secure Version)
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+ini_set('session.cookie_httponly', 1);
+ini_set('session.cookie_secure', 1);
+
 session_start();
 require_once "includes/db.php";
 require_once "includes/functions.php";
 
-// Generate a secure reset token
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 function generateToken($length = 64) {
     return bin2hex(random_bytes($length / 2));
 }
 
-// Handle form submission
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $email = trim($_POST["email"]);
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        die("Invalid CSRF token.");
+    }
 
-    if (empty($email)) {
-        $_SESSION["error"] = "Please enter your email.";
+    $email = filter_var(trim($_POST["email"]), FILTER_SANITIZE_EMAIL);
+
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $_SESSION["error"] = "Invalid email address.";
         header("Location: forgot_password.php");
         exit;
     }
 
-    // Check if the user exists
     $stmt = $pdo->prepare("SELECT id FROM users WHERE email = :email LIMIT 1");
     $stmt->execute(['email' => $email]);
     $user = $stmt->fetch();
 
     if ($user) {
         $token = generateToken();
-        $expires = date("Y-m-d H:i:s", time() + 3600); // 1 hour from now
+        $expires = date("Y-m-d H:i:s", time() + 3600);
 
-        // Save token to DB
         $stmt = $pdo->prepare("UPDATE users SET reset_token = :token, reset_expires = :expires WHERE id = :id");
         $stmt->execute([
             'token' => $token,
             'expires' => $expires,
-            'id' => $user['id']
+            'id' => $user["id"]
         ]);
 
-        // Build reset link
         $resetLink = "https://farmappv3.blkfarms.com/reset_password.php?token=$token";
-
-        // Send reset email
         $sent = sendResetEmail($email, $resetLink);
         if ($sent) {
             $_SESSION["success"] = "A password reset link has been sent to your email.";
         } else {
-            $_SESSION["error"] = "Unable to send the reset email. Please try again later.";
+            $_SESSION["error"] = "Failed to send the reset email. Please try again later.";
         }
-        header("Location: forgot_password.php");
-        exit;
+    } else {
+        $_SESSION["success"] = "A password reset link has been sent to your email.";
     }
 
-    // Generic response even if user is not found (security best practice)
-    $_SESSION["success"] = "A password reset link has been sent to your email.";
     header("Location: forgot_password.php");
     exit;
 }
@@ -70,11 +76,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     <?php
     if (isset($_SESSION['error'])) {
-        echo "<p class='error'>" . $_SESSION['error'] . "</p>";
+        echo "<p class='error'>" . htmlspecialchars($_SESSION['error']) . "</p>";
         unset($_SESSION['error']);
     }
     if (isset($_SESSION['success'])) {
-        echo "<p class='success'>" . $_SESSION['success'] . "</p>";
+        echo "<p class='success'>" . htmlspecialchars($_SESSION['success']) . "</p>";
         unset($_SESSION['success']);
     }
     ?>
@@ -83,6 +89,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       <label>Enter Your Email Address</label>
       <input type="email" name="email" required>
 
+      <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
       <button type="submit">Send Reset Link</button>
     </form>
 
