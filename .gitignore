@@ -1,1 +1,17 @@
-includes/db.php
+# Credentials — NEVER commit these
+includes/secrets.php
+.env
+
+# Logs
+*.log
+logs/
+
+# Editor / OS junk
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# NOTE: includes/db.php no longer contains credentials (now reads from secrets.php)
+# and should be committed. The old entry below is kept as a comment for history:
+# includes/db.php

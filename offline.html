@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Offline | FarmApp</title>
+  <style>
+    /* Intentionally self-contained — no external CSS dependency */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      background: #f2f2f2;
+      color: #1a1a1a;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100dvh;
+      min-height: 100vh;
+      padding: 2rem 1rem;
+      text-align: center;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,.12);
+      padding: 2.5rem 2rem;
+      max-width: 360px;
+      width: 100%;
+    }
+
+    .icon {
+      font-size: 3.5rem;
+      margin-bottom: 1rem;
+      display: block;
+    }
+
+    h1 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: .5rem;
+      color: #2d2d30;
+    }
+
+    p {
+      font-size: .95rem;
+      color: #555;
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+    }
+
+    .btn {
+      display: inline-block;
+      background: #2d2d30;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: .85rem 1.75rem;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      min-height: 48px;
+      transition: background .15s;
+    }
+    .btn:hover { background: #1f1f21; }
+
+    .status {
+      margin-top: 1.25rem;
+      font-size: .82rem;
+      color: #888;
+    }
+
+    .dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #e53e3e;
+      margin-right: 5px;
+      vertical-align: middle;
+    }
+    .dot.online { background: #38a169; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <span class="icon" role="img" aria-label="No connection">📡</span>
+    <h1>You're offline</h1>
+    <p>
+      FarmApp can't reach the server right now.<br>
+      Check your connection and try again — any changes you made while offline will sync automatically when you reconnect.
+    </p>
+    <button class="btn" onclick="tryReload()">Try again</button>
+    <p class="status">
+      <span class="dot" id="dot"></span>
+      <span id="status-text">No connection</span>
+    </p>
+  </div>
+
+  <script>
+    function tryReload() {
+      window.location.reload();
+    }
+
+    function updateStatus() {
+      const online = navigator.onLine;
+      document.getElementById('dot').className       = 'dot' + (online ? ' online' : '');
+      document.getElementById('status-text').textContent = online
+        ? 'Connection restored — tap Try again'
+        : 'No connection';
+    }
+
+    window.addEventListener('online',  updateStatus);
+    window.addEventListener('offline', updateStatus);
+    updateStatus();
+  </script>
+</body>
+</html>

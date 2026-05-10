@@ -1,0 +1,78 @@
+# FarmApp — Root .htaccess
+# Security headers, HTTPS enforcement, and file protection.
+
+# -----------------------------------------------
+# Force HTTPS
+# -----------------------------------------------
+RewriteEngine On
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# -----------------------------------------------
+# Security Headers
+# -----------------------------------------------
+<IfModule mod_headers.c>
+    # HSTS: tell browsers to always use HTTPS (1 year)
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains" env=HTTPS
+
+    # Prevent framing (clickjacking)
+    Header always set X-Frame-Options "SAMEORIGIN"
+
+    # Prevent MIME-type sniffing
+    Header always set X-Content-Type-Options "nosniff"
+
+    # Legacy XSS filter (belt-and-suspenders)
+    Header always set X-XSS-Protection "1; mode=block"
+
+    # Limit referrer information
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+
+    # Disable browser features not needed by this app
+    Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+
+    # Content Security Policy
+    # - 'self' for scripts, styles, images
+    # - 'unsafe-inline' for styles only (inline <style> blocks in dashboard/view pages)
+    # - data: for any base64-encoded images used by future PWA icons
+    Header always set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';"
+</IfModule>
+
+# -----------------------------------------------
+# Directory listing
+# -----------------------------------------------
+Options -Indexes
+
+# -----------------------------------------------
+# PHP error display (production safety net)
+# -----------------------------------------------
+<IfModule mod_php.c>
+    php_flag display_errors Off
+    php_flag log_errors On
+</IfModule>
+
+# -----------------------------------------------
+# Protect sensitive files from direct web access
+# -----------------------------------------------
+<FilesMatch "(^\.env|secrets\.php|\.gitignore|\.gitattributes|SQL-Schema\.sql|SQL-CreateUsers\.txt|.*\.log)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order Allow,Deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# -----------------------------------------------
+# Cache static assets (CSS/JS)
+# -----------------------------------------------
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/css             "access plus 1 week"
+    ExpiresByType application/javascript "access plus 1 week"
+    ExpiresByType image/png            "access plus 1 month"
+    ExpiresByType image/jpeg           "access plus 1 month"
+    ExpiresByType image/svg+xml        "access plus 1 month"
+    ExpiresByType image/x-icon         "access plus 1 month"
+    ExpiresByType application/manifest+json "access plus 1 day"
+</IfModule>

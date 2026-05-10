@@ -1,0 +1,25 @@
+# api/.htaccess — API directory rules
+
+# No directory listing
+Options -Indexes
+
+# All responses from this directory are JSON
+<IfModule mod_headers.c>
+    Header always set Content-Type "application/json; charset=UTF-8"
+    # Allow same-origin fetch calls from the PWA
+    Header always set Access-Control-Allow-Origin "https://farmappv3.blkfarms.com"
+    Header always set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+    Header always set Access-Control-Allow-Headers "Authorization, Content-Type"
+    Header always set Access-Control-Max-Age "86400"
+</IfModule>
+
+# Handle OPTIONS preflight (CORS) — return 204 immediately
+RewriteEngine On
+RewriteCond %{REQUEST_METHOD} OPTIONS
+RewriteRule ^ - [R=204,L]
+
+# PHP errors must not produce HTML in this directory
+<IfModule mod_php.c>
+    php_flag  display_errors Off
+    php_flag  log_errors     On
+</IfModule>

@@ -1,35 +1,37 @@
 <?php
+// includes/functions.php — Application helper functions.
+// Mail credentials are loaded from secrets.php (gitignored).
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
 require_once __DIR__ . '/../mailer/PHPMailer.php';
 require_once __DIR__ . '/../mailer/SMTP.php';
 require_once __DIR__ . '/../mailer/Exception.php';
+require_once __DIR__ . '/secrets.php';
 
 function sendResetEmail($toEmail, $resetLink) {
     $mail = new PHPMailer(true);
 
     try {
-        // SMTP configuration
         $mail->isSMTP();
-        $mail->Host = 'mail.blkfarms.com';
-        $mail->SMTPAuth = true;
-        $mail->Username = 'no_reply@blkfarms.com';
-        $mail->Password = 'r{MJkq4zt$kM0~7#'; // <-- INSERT YOUR PASSWORD HERE
-        $mail->SMTPSecure = 'ssl';
-        $mail->Port = 465;
+        $mail->Host       = MAIL_HOST;
+        $mail->SMTPAuth   = true;
+        $mail->Username   = MAIL_USER;
+        $mail->Password   = MAIL_PASS;
+        $mail->SMTPSecure = MAIL_SECURE;
+        $mail->Port       = MAIL_PORT;
 
-        // Sender & recipient
-        $mail->setFrom('no_reply@blkfarms.com', 'FarmApp');
+        $mail->setFrom(MAIL_FROM, MAIL_FROM_NAME);
         $mail->addAddress($toEmail);
 
-        // Email content
         $mail->isHTML(true);
         $mail->Subject = 'FarmApp Password Reset';
+
+        $safeLink = htmlspecialchars($resetLink, ENT_QUOTES, 'UTF-8');
         $mail->Body = "
             <p>Hello,</p>
             <p>You requested a password reset. Click the link below to reset your password:</p>
-            <p><a href='$resetLink'>$resetLink</a></p>
+            <p><a href='{$safeLink}'>{$safeLink}</a></p>
             <p>This link will expire in 1 hour.</p>
         ";
 
